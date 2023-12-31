@@ -1,0 +1,16 @@
+flask
+flask_cors
+gevent
+langchain
+pypdf2
+concurrent-log-handler==0.9.24
+gunicorn
+jieba
+python-docx
+docx
+llama_index
+poetry
+transformers
+torch
+accelerate
+gradio
