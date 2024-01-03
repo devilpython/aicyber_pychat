@@ -1,6 +1,5 @@
 from flask import request, jsonify, Flask
 from flask_cors import *
-from multiprocessing import cpu_count, Process
 from gevent import pywsgi
 from common_utils.flask_uploads import UploadSet, configure_uploads, DOCUMENTS
 from pymilvus import utility, connections
@@ -15,7 +14,6 @@ import os
 from llama_index.embeddings import HuggingFaceEmbedding
 import json
 import requests
-# from torch.multiprocessing import get_context
 
 os.environ['TOKENIZERS_PARALLELISM'] = 'true'
 os.environ['MILVUS_CONN_TIMEOUT'] = config.MILVUS_CONN_TIMEOUT
@@ -27,19 +25,19 @@ CORS(app, supports_credentials=True)
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 print('.......current_path:', current_path)
-common.initLogging(current_path, 'qa_pychat')
+common.initLogging(current_path, 'aicyber_pychat')
 
 files = UploadSet('text', DOCUMENTS)
 app.config['UPLOADS_DEFAULT_DEST'] = './upload_files'
 configure_uploads(app, files)
 
-log = getLogger('qa_pychat')
+log = getLogger('aicyber_pychat')
 
 embed_model = HuggingFaceEmbedding(model_name="./BAAI_bge-base-zh-v1.5")
 
 @app.route('/', methods=['GET', 'POST'])
 def getRoot():
-    return jsonify({'successful': True, 'message': 'ok', 'version': 'qa pychat 2023.12.26.1'})
+    return jsonify({'successful': True, 'message': 'ok', 'version': 'qa pychat 2024.1.2.1'})
 
 @app.route('/favicon.ico', methods=['GET', 'POST'])
 def getFavicon():
@@ -79,13 +77,13 @@ def upload_file():
     try:
         vec_store = index_utils.create_vec_store(embed_model, collection)
         text_list = text_utils.load_text_list(file_path)
-        doc_list = index_utils.create_doc_list(text_list)
-        print('.................append docs length:', len(doc_list))
+        doc_list, answer_dict = index_utils.create_doc_list(text_list)
+        # print('.................append docs length:', len(doc_list))
         langchain_llm = index_utils.create_llm(False)
         index = index_utils.create_vec_index(langchain_llm, embed_model, vec_store)
-        print('.................index:', index)
-        id_list = index_utils.append_doc_list(index, doc_list)
-        print('.................id_list:', id_list)
+        # print('.................index:', index)
+        id_list = index_utils.append_doc_list(index, doc_list, answer_dict)
+        # print('.................id_list:', id_list)
         return jsonify({'successful': True, 'message': 'ok', 'ids': id_list})
     except Exception as e:
         print('error:', e)
@@ -115,11 +113,10 @@ def append_texts():
     try:
         vec_store = index_utils.create_vec_store(embed_model, collection)
         # text_list = text_utils.split_text(text)
-        doc_list = index_utils.create_doc_list(text_list)
+        doc_list, answer_dict = index_utils.create_doc_list(text_list)
         langchain_llm = index_utils.create_llm(False)
         index = index_utils.create_vec_index(langchain_llm, embed_model, vec_store)
         id_list = index_utils.append_doc_list(index, doc_list)
-        print('.................id_list:', id_list)
         return jsonify({'successful': True, 'message': 'ok', 'ids': id_list})
     except Exception as e:
         print('error:', e)
@@ -157,12 +154,12 @@ def append_qa():
 
     try:
         vec_store = index_utils.create_vec_store(embed_model, collection)
-        doc_list = index_utils.create_doc_list([text_utils.create_qa_text(question, answer)])
+        doc_list, answer_dict = index_utils.create_doc_list([text_utils.create_qa_text(question, answer)])
         langchain_llm = index_utils.create_llm(True)
         index = index_utils.create_vec_index(langchain_llm, embed_model, vec_store)
-        doc_id = index_utils.append_document(index, doc_list[0])
-        if doc_id is not None:
-            return jsonify({'successful': True, 'message': 'ok', 'id': doc_id})
+        id_list = index_utils.append_doc_list(index, doc_list, answer_dict)
+        if len(id_list) == 1:
+            return jsonify({'successful': True, 'message': 'ok', 'id': id_list[0]})
         else:
             return jsonify({'successful': False, 'message': 'qa数据已经存在', 'id': None})
     except Exception as e:
@@ -403,9 +400,5 @@ def write_log_after(response):
             pass
     return response
 
-def run(port):
-    print(u'单进程服务器已经启动!!!')
-    pywsgi.WSGIServer(('0.0.0.0', port), app).serve_forever()
-
 if __name__ == '__main__':
-    run(9090)
+    pywsgi.WSGIServer(('0.0.0.0', 9090), app).serve_forever()
