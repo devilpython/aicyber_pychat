@@ -73,14 +73,13 @@ def create_doc(doc_id, text):
     return Document(text=text, id_=f'doc_id_{doc_id}')
 
 def append_doc_list(index, doc_list, answer_dict=None):
-    print('..........answer_dict len:', len(answer_dict))
     _exist_id_set = exist_id_set(index, doc_list)
     id_list = []
     redis_utils = RedisUtils(config.REDIS_DB)
     for doc_chunk in doc_list:
         if doc_chunk.doc_id not in _exist_id_set:
             # print('....insert:', doc_chunk.doc_id)
-            if answer_dict is not None:
+            if answer_dict is not None and len(answer_dict) > 0:
                 prefix = 'qa-'
                 redis_key = prefix + doc_chunk.doc_id
                 if isinstance(index, VectorStoreIndex):
@@ -126,6 +125,10 @@ def delete_collection(collection_name):
     return utility.drop_collection(collection_name)
 
 def drop_vectors(collection_name, data_ids):
+    redis_utils = RedisUtils(config.REDIS_DB)
+    prefix = 'qa-'
+    for data_id in data_ids:
+        redis_utils.deleteKey(prefix + collection_name + '-' + data_id)
     expr = f'id in {str(data_ids)}'
     conn = Collection(collection_name)
     result = conn.delete(expr=expr)
