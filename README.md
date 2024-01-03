@@ -8,7 +8,7 @@
 
 ## 运行方式：
 ```
-  python app.py
+python app.py
 ```
 
 ## 接口：
