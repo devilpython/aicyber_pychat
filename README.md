@@ -7,7 +7,9 @@
 ### [redis](https://redis.io/)
 
 ## 运行方式：
+···
   python app.py
+···
 
 ## 接口：
 ### 1.数据上传接口：
