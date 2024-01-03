@@ -3,8 +3,8 @@
 
 ## 依赖的服务项目：
   [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) 
-  milvus(https://milvus.io/)
-  redis(https://redis.io/)
+  [milvus](https://milvus.io/)
+  [redis](https://redis.io/)
 
 ## 运行方式：
   python app.py
