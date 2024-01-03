@@ -2,9 +2,9 @@
 基于大模型和llama index的对话项目
 
 ## 依赖的服务项目：
-  text-generation-webui
-  milvus
-  redis
+  [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui) 
+  milvus(https://milvus.io/)
+  redis(https://redis.io/)
 
 ## 运行方式：
   python app.py
